@@ -43,46 +43,10 @@ submitButton.addEventListener("click", (event) => {
 
 deleteButton.addEventListener("click", (event) => {
 	event.preventDefault();
+	handleDelete();
 });
 
 //------------- da qui in poi dichiaro tutte le funzioni
-const handleDelete = () => {
-	// chiediamo conferma all'utente di voler eliminare
-	const hasConfirmed = confirm("sei sicuro di voler eliminare l'appuntamento?");
-
-	if (hasConfirmed) {
-		// se accetta procediamo all'effettiva rimozione
-
-		// isLoading(true); // avvio lo spinner di caricamento
-
-		fetch(URL, {
-			method: "DELETE",
-		}) // già a questo punto la risorsa è stata eliminata
-			.then((resp) => {
-				// aspettare con un then ci può essere utile solo per sapere esattamente quando il server ci ha risposto per avere ulteriore conferma
-				if (resp.ok) {
-					return resp.json();
-				}
-			})
-			.then((deletedObj) => {
-				showAlert(
-					"hai eliminato la risorsa " +
-						deletedObj.name +
-						" che aveva id: " +
-						deletedObj._id,
-					"danger"
-				);
-				// un alert custom non fa attendere prima del cambio pagina con window.location assign,
-				// abbiamo quindi bisogno di un setTimeout per forzare l'attesa per il tempo desiderato
-				setTimeout(() => {
-					window.location.assign("./index.html");
-				}, 3000);
-			})
-			.finally(() => {
-				isLoading(false); // spengo lo spinner di caricamento
-			});
-	}
-};
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function handleRequest() {
@@ -95,8 +59,6 @@ function handleRequest() {
 		price: priceField.value,
 	};
 
-	// isLoading(true); //avvio lo spinner di caricamento
-
 	fetch(URL, {
 		method,
 		// converting Obj to JSON and attaching to body
@@ -107,17 +69,55 @@ function handleRequest() {
 		},
 	})
 		.then((response) => response.json())
-		.then((createdObj) => showAlert(createdObj._id, method, newItem.imageUrl));
+		.then((item) => showAlert(item._id, method, item.imageUrl));
 }
 
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+function handleDelete() {
+	const hasConfirmed = confirm("Sei sicuro di voler eliminare il prodotto?");
+
+	if (hasConfirmed) {
+		fetch(URL, {
+			method: "DELETE",
+			headers: { Authorization: token },
+		}) // here the items has already been deleted
+			.then((resp) => {
+				if (resp.ok) {
+					return resp.json();
+				}
+			})
+			.then((deletedObj) => {
+				showAlert(deletedObj._id, "DELETE", deletedObj.imageUrl);
+
+				setTimeout(() => {
+					window.location.assign("./index.html");
+				}, 3000);
+			});
+	}
+}
+//  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 function showAlert(id, methodType, urlImgObjCreatedOrEdited) {
-	console.log(methodType);
-	const colorCode = methodType === "POST" ? "primary" : "warning";
-	const action = methodType === "POST" ? "creato" : "modificato";
+	switch (methodType) {
+		case "POST":
+			colorCode = "primary";
+			action = "creato";
+			break;
+		case "PUT":
+			colorCode = "warning";
+			action = "modificato";
+			break;
+		case "DELETE":
+			colorCode = "danger";
+			action = "eliminato";
+			break;
+		default:
+			colorCode = "secondary";
+			break;
+	}
 
 	alertBox.innerHTML = `<div class="alert alert-${colorCode} p-5" role="alert">
-	L'item con ID ${id} è stato ${action}
+	L'item con ID ${id} è stato <span class="fs-3">${action}</span>
 	</div>`;
 
 	previewImage.innerHTML = `
@@ -164,15 +164,3 @@ function fillFieldByResourceId() {
 		});
 }
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// function emptyFields() {
-// 	previewImage.innerHTML = "";
-// 	nameField.value = "";
-// 	descriptionField.value = "";
-// 	brandField.value = "";
-// 	imageUrlField.value = "";
-// 	priceField.value = "";
-// 	submitButton.classList.remove("btn-warning");
-// 	submitButton.classList.add("btn-primary");
-// 	submitButton.innerHTML = "Crea";
-// 	alertBox.innerHTML = "";
-// }
