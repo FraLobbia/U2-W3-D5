@@ -16,10 +16,15 @@ const brandField = document.getElementById("brand");
 const imageUrlField = document.getElementById("imageUrl");
 const priceField = document.getElementById("price");
 const submitButton = document.getElementById("submitButton");
+const buttonForModalDeleteRequest = document.getElementById(
+	"buttonForModalDeleteRequest"
+);
 const deleteButton = document.getElementById("deleteButton");
+const resetFieldsButton = document.getElementById("resetFields");
 const alertBox = document.getElementById("alert-box");
+const deleteRequestModal = document.getElementById("deleteRequestModal");
 
-// checking if create|edit
+// checking if I want create or edit by resourceId presence
 if (resourceId) {
 	method = "PUT";
 	URL = endPoint + resourceId;
@@ -33,7 +38,8 @@ if (resourceId) {
 	submitButton.classList.add("btn-primary");
 	submitButton.innerHTML = "Crea";
 	H1.innerHTML = "Inserisci un nuovo articolo";
-	deleteButton.classList.add("d-none");
+	buttonForModalDeleteRequest.classList.add("d-none");
+	resetFieldsButton.classList.add("d-none");
 }
 
 submitButton.addEventListener("click", (event) => {
@@ -44,6 +50,11 @@ submitButton.addEventListener("click", (event) => {
 deleteButton.addEventListener("click", (event) => {
 	event.preventDefault();
 	handleDelete();
+});
+
+resetFieldsButton.addEventListener("click", (event) => {
+	event.preventDefault();
+	emptyFields();
 });
 
 //------------- da qui in poi dichiaro tutte le funzioni
@@ -68,39 +79,85 @@ function handleRequest() {
 			Authorization: token,
 		},
 	})
-		.then((response) => response.json())
-		.then((item) => showAlert(item._id, method, item.imageUrl));
+		.then((response) => {
+			console.log(response);
+			switch (true) {
+				case response.status === 404:
+					throw new Error(response.status, " risorsa non trovata");
+					break;
+				case response.status === 401:
+					throw new Error("Non sei autorizzato. Errore: " + response.status);
+					break;
+				case response.status >= 400 && response.status < 500:
+					throw new Error("Errore lato Client: " + response.status);
+					break;
+				case response.status >= 500 && response.status < 600:
+					throw new Error("Errore lato Server: " + response.status);
+					break;
+
+				default:
+					break;
+			}
+			if (!response.ok) throw new Error("Errore nel reperimento dei dati");
+
+			// document.querySelector(".spinner-border").classList.add("d-none")
+			return response.json();
+		})
+		.then((item) => showAlert(item._id, method, item.imageUrl))
+		.catch((error) => {
+			console.log(error);
+			// document.querySelector(".spinner-border").classList.add("d-none")
+		});
 }
 
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 function handleDelete() {
-	const hasConfirmed = confirm("Sei sicuro di voler eliminare il prodotto?");
+	fetch(URL, {
+		method: "DELETE",
+		headers: { Authorization: token },
+	}) // here the items has already been deleted
+		.then((response) => {
+			console.log(response);
+			switch (true) {
+				case response.status === 404:
+					throw new Error(response.status, " risorsa non trovata");
+					break;
+				case response.status === 401:
+					throw new Error("Non sei autorizzato. Errore: " + response.status);
+					break;
+				case response.status >= 400 && response.status < 500:
+					throw new Error("Errore lato Client: " + response.status);
+					break;
+				case response.status >= 500 && response.status < 600:
+					throw new Error("Errore lato Server: " + response.status);
+					break;
 
-	if (hasConfirmed) {
-		fetch(URL, {
-			method: "DELETE",
-			headers: { Authorization: token },
-		}) // here the items has already been deleted
-			.then((resp) => {
-				if (resp.ok) {
-					return resp.json();
-				}
-			})
-			.then((deletedObj) => {
-				showAlert(deletedObj._id, "DELETE", deletedObj.imageUrl);
+				default:
+					break;
+			}
+			if (!response.ok) throw new Error("Errore nel reperimento dei dati");
 
-				setTimeout(() => {
-					window.location.assign("./index.html");
-				}, 3000);
-			});
-	}
+			// document.querySelector(".spinner-border").classList.add("d-none")
+			return response.json();
+		})
+		.then((deletedObj) => {
+			showAlert(deletedObj._id, "DELETE", deletedObj.imageUrl);
+
+			setTimeout(() => {
+				window.location.assign("./index.html");
+			}, 3000);
+		})
+		.catch((error) => {
+			console.log(error);
+			// document.querySelector(".spinner-border").classList.add("d-none")
+		});
 }
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function showAlert(id, methodType, urlImgObjCreatedOrEdited) {
 	switch (methodType) {
 		case "POST":
-			colorCode = "primary";
+			colorCode = "success";
 			action = "creato";
 			break;
 		case "PUT":
@@ -140,7 +197,30 @@ function fillFieldByResourceId() {
 			Authorization: token,
 		},
 	})
-		.then((response) => response.json())
+		.then((response) => {
+			console.log(response);
+			switch (true) {
+				case response.status === 404:
+					throw new Error(response.status, " risorsa non trovata");
+					break;
+				case response.status === 401:
+					throw new Error("Non sei autorizzato. Errore: " + response.status);
+					break;
+				case response.status >= 400 && response.status < 500:
+					throw new Error("Errore lato Client: " + response.status);
+					break;
+				case response.status >= 500 && response.status < 600:
+					throw new Error("Errore lato Server: " + response.status);
+					break;
+
+				default:
+					break;
+			}
+			if (!response.ok) throw new Error("Errore nel reperimento dei dati");
+
+			// document.querySelector(".spinner-border").classList.add("d-none")
+			return response.json();
+		})
 		.then((returnedObj) => {
 			const name = returnedObj.name;
 			const description = returnedObj.description;
@@ -161,6 +241,18 @@ function fillFieldByResourceId() {
 			brandField.value = brand;
 			imageUrlField.value = imageUrl;
 			priceField.value = price;
+		})
+		.catch((error) => {
+			console.log(error);
+			// document.querySelector(".spinner-border").classList.add("d-none")
 		});
 }
-//  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//  wqsa+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+function emptyFields() {
+	// previewImage.innerHTML = "";
+	nameField.value = "";
+	descriptionField.value = "";
+	brandField.value = "";
+	imageUrlField.value = "";
+	priceField.value = "";
+}
