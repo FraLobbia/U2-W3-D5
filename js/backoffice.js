@@ -1,13 +1,13 @@
 const endPoint = "https://striveschool-api.herokuapp.com/api/product/";
 const token =
-	"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTcyMGYxYzBkOGEyMDAwMThhNDhiNTIiLCJpYXQiOjE3MDE5NzM3ODgsImV4cCI6MTcwMzE4MzM4OH0.Kn9YzZA1fLPxw_xkhw9M8rPanpPw3O46igadjHIJorQ";
+	"Bearera eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTcyMGYxYzBkOGEyMDAwMThhNDhiNTIiLCJpYXQiOjE3MDE5NzM3ODgsImV4cCI6MTcwMzE4MzM4OH0.Kn9YzZA1fLPxw_xkhw9M8rPanpPw3O46igadjHIJorQ";
 
-// get resourceId from URL
+// get resourceId from URL --------------------------------------------------------------
 const resourceId = new URLSearchParams(window.location.search).get(
 	"resourceId"
 );
 
-// defining fields
+// defining fields and target to modify --------------------------------------------------------------
 const H1 = document.querySelector("h1");
 const previewImage = document.getElementById("preview-image");
 const nameField = document.getElementById("name");
@@ -16,20 +16,19 @@ const brandField = document.getElementById("brand");
 const imageUrlField = document.getElementById("imageUrl");
 const priceField = document.getElementById("price");
 const submitButton = document.getElementById("submitButton");
-const buttonForModalDeleteRequest = document.getElementById(
-	"buttonForModalDeleteRequest"
-);
 const deleteButton = document.getElementById("deleteButton");
+const confirmModalButton = document.getElementById("confirmModalButton");
 const resetFieldsButton = document.getElementById("resetFields");
 const alertBox = document.getElementById("alert-box");
-const deleteRequestModal = document.getElementById("deleteRequestModal");
+const modalTitle = document.querySelector(".modal-title");
+const modalBody = document.querySelector(".modal-body");
 
-// checking if I want create or edit by resourceId presence
+// checking if I want create or edit by resourceId presence -------------------------------
 if (resourceId) {
 	method = "PUT";
 	URL = endPoint + resourceId;
 	fillFieldByResourceId(); // filling fields with data to modify
-	submitButton.classList.add("btn-warning"); //
+	submitButton.classList.add("btn-warning");
 	submitButton.innerHTML = "Salva modifica";
 	H1.innerHTML = "Modifica un articolo";
 } else {
@@ -38,26 +37,37 @@ if (resourceId) {
 	submitButton.classList.add("btn-primary");
 	submitButton.innerHTML = "Crea";
 	H1.innerHTML = "Inserisci un nuovo articolo";
-	buttonForModalDeleteRequest.classList.add("d-none");
+	deleteButton.classList.add("d-none");
 	resetFieldsButton.classList.add("d-none");
 }
 
+// handling buttons behaviour --------------------------------------------------------------
 submitButton.addEventListener("click", (event) => {
 	event.preventDefault();
 	handleRequest();
 });
 
-deleteButton.addEventListener("click", (event) => {
-	event.preventDefault();
-	handleDelete();
+deleteButton.addEventListener("click", () => {
+	handleModal(
+		"Conferma delete",
+		"Alla conferma l'oggetto verrà eliminato dal server",
+		"Sì, cancellalo",
+		"danger",
+		handleDelete
+	);
 });
 
-resetFieldsButton.addEventListener("click", (event) => {
-	event.preventDefault();
-	emptyFields();
+resetFieldsButton.addEventListener("click", () => {
+	handleModal(
+		"Conferma reset campi",
+		"Alla conferma i campi verranno resettati",
+		"Sì, resettali",
+		"primary",
+		emptyFields
+	);
 });
 
-//------------- da qui in poi dichiaro tutte le funzioni
+//------------- from here only functions declaration
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function handleRequest() {
@@ -76,7 +86,7 @@ function handleRequest() {
 		body: JSON.stringify(newItem),
 		headers: {
 			"Content-Type": "application/json",
-			Authorization: token,
+			Authorization: "fgssr",
 		},
 	})
 		.then((response) => {
@@ -98,7 +108,7 @@ function handleRequest() {
 				default:
 					break;
 			}
-			if (!response.ok) throw new Error("Errore nel reperimento dei dati");
+			if (!response.ok) showAlertError(response.status);
 
 			// document.querySelector(".spinner-border").classList.add("d-none")
 			return response.json();
@@ -131,11 +141,9 @@ function handleDelete() {
 				case response.status >= 500 && response.status < 600:
 					throw new Error("Errore lato Server: " + response.status);
 					break;
-
 				default:
 					break;
 			}
-			if (!response.ok) throw new Error("Errore nel reperimento dei dati");
 
 			// document.querySelector(".spinner-border").classList.add("d-none")
 			return response.json();
@@ -152,6 +160,89 @@ function handleDelete() {
 			// document.querySelector(".spinner-border").classList.add("d-none")
 		});
 }
+
+//  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+function fillFieldByResourceId() {
+	fetch(URL, {
+		headers: {
+			Authorization: token,
+		},
+	})
+		.then((response) => {
+			console.log(response);
+			switch (true) {
+				case response.status === 404:
+					throw new Error(response.status);
+
+				case response.status === 401:
+					const customError = new Error("Questo è un errore personalizzato");
+					customError.code = response.status;
+				case response.status >= 400 && response.status < 500:
+					throw new Error(response.status);
+
+				case response.status >= 500 && response.status < 600:
+					throw new Error(response.status);
+
+				default:
+					break;
+			}
+
+			// document.querySelector(".spinner-border").classList.add("d-none")
+			return response.json();
+		})
+		.then((returnedObj) => {
+			const name = returnedObj.name;
+			const description = returnedObj.description;
+			const brand = returnedObj.brand;
+			const imageUrl = returnedObj.imageUrl;
+			const price = returnedObj.price;
+			const id = returnedObj._id;
+
+			previewImage.innerHTML = `
+						<img
+							src="${imageUrl}"
+							class="img-thumbnail mx-auto d-block my-4"
+							alt="..."
+							style="max-height: 200px"
+						/>`;
+			nameField.value = name;
+			descriptionField.value = description;
+			brandField.value = brand;
+			imageUrlField.value = imageUrl;
+			priceField.value = price;
+		})
+		.catch((error) => {
+			showAlertError(error);
+		});
+}
+//  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+function emptyFields() {
+	// previewImage.innerHTML = "";
+	nameField.value = "";
+	descriptionField.value = "";
+	brandField.value = "";
+	imageUrlField.value = "";
+	priceField.value = "";
+}
+//  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+function handleModal(
+	title = "Conferma azione",
+	body = "Sei sicuro?",
+	textButtonConfirm = "Conferma",
+	colorButtonConfirm = "primary",
+	functionToAdd
+) {
+	modalTitle.innerHTML = title;
+	modalBody.innerHTML = body;
+	confirmModalButton.innerHTML = textButtonConfirm;
+	confirmModalButton.className = "btn btn-" + colorButtonConfirm;
+
+	confirmModalButton.addEventListener("click", (event) => {
+		functionToAdd();
+	});
+}
+
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function showAlert(id, methodType, urlImgObjCreatedOrEdited) {
@@ -191,68 +282,40 @@ function showAlert(id, methodType, urlImgObjCreatedOrEdited) {
 }
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-function fillFieldByResourceId() {
-	fetch(URL, {
-		headers: {
-			Authorization: token,
-		},
-	})
-		.then((response) => {
-			console.log(response);
-			switch (true) {
-				case response.status === 404:
-					throw new Error(response.status, " risorsa non trovata");
-					break;
-				case response.status === 401:
-					throw new Error("Non sei autorizzato. Errore: " + response.status);
-					break;
-				case response.status >= 400 && response.status < 500:
-					throw new Error("Errore lato Client: " + response.status);
-					break;
-				case response.status >= 500 && response.status < 600:
-					throw new Error("Errore lato Server: " + response.status);
-					break;
+function showAlertError(errorCode) {
+	console.log(errorCode);
+	console.log(errorCode.code);
 
-				default:
-					break;
-			}
-			if (!response.ok) throw new Error("Errore nel reperimento dei dati");
+	switch (errorCode.code) {
+		case "404":
+			message = "Risorsa non trovata.";
+			break;
+		case "401":
+			message = "Non sei autorizzato.";
+			break;
+		case "418":
+			message = "I'm a teapot.";
+			break;
+		default:
+			message = "Errore non personalizzato";
+			break;
+	}
 
-			// document.querySelector(".spinner-border").classList.add("d-none")
-			return response.json();
-		})
-		.then((returnedObj) => {
-			const name = returnedObj.name;
-			const description = returnedObj.description;
-			const brand = returnedObj.brand;
-			const imageUrl = returnedObj.imageUrl;
-			const price = returnedObj.price;
-			const id = returnedObj._id;
+	alertBox.innerHTML = `
+	<div class="alert alert-danger p-5" role="alert">
+	    <p class="fs-1"201>${message}</p>
+		<p>${errorCode}</p>
+	</div>`;
 
-			previewImage.innerHTML = `
-						<img
-							src="${imageUrl}"
-							class="img-thumbnail mx-auto d-block my-4"
-							alt="..."
-							style="max-height: 200px"
-						/>`;
-			nameField.value = name;
-			descriptionField.value = description;
-			brandField.value = brand;
-			imageUrlField.value = imageUrl;
-			priceField.value = price;
-		})
-		.catch((error) => {
-			console.log(error);
-			// document.querySelector(".spinner-border").classList.add("d-none")
-		});
-}
-//  wqsa+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-function emptyFields() {
-	// previewImage.innerHTML = "";
-	nameField.value = "";
-	descriptionField.value = "";
-	brandField.value = "";
-	imageUrlField.value = "";
-	priceField.value = "";
+	previewImage.innerHTML = `
+	<img
+		src="https://a0.anyrgb.com/pngimg/900/1540/sad-meme-your-pepe-the-frog-feel-sad-sadness-crying-tree-frog-know-your-meme-humour.png"
+		class="img-thumbnail mx-auto d-block my-4"
+		alt="error image"
+		style="max-height: 200px"
+	/>`;
+
+	// setTimeout(() => {
+	// 	window.location.href = "./backoffice.html";
+	// }, 3000);
 }

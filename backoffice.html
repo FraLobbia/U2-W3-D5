@@ -62,11 +62,11 @@
 			</nav>
 		</header>
 
-		<div class="modal" tabindex="-1" id="deleteRequestModal">
+		<div class="modal" tabindex="-1" id="myModal">
 			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title">Conferma cancellazione</h5>
+						<h5 class="modal-title"></h5>
 						<button
 							type="button"
 							class="btn-close"
@@ -75,7 +75,7 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<p>Sei sicuro di voler eliminare il prodotto?</p>
+						<p></p>
 					</div>
 					<div class="modal-footer">
 						<button
@@ -87,12 +87,10 @@
 						</button>
 						<button
 							type="button"
-							class="btn btn-danger"
+							class="btn"
 							data-bs-dismiss="modal"
-							id="deleteButton"
-						>
-							Sì, cancellalo
-						</button>
+							id="confirmModalButton"
+						></button>
 					</div>
 				</div>
 			</div>
@@ -113,6 +111,7 @@
 						class="form-control"
 						aria-label="Sizing example input"
 						aria-describedby="name"
+						required
 					/>
 				</div>
 				<div class="input-group mb-3">
@@ -125,6 +124,7 @@
 						class="form-control"
 						aria-label="Sizing example input"
 						aria-describedby="description"
+						required
 					/>
 				</div>
 				<div class="input-group mb-3">
@@ -137,6 +137,7 @@
 						class="form-control"
 						aria-label="Sizing example input"
 						aria-describedby="brand"
+						required
 					/>
 				</div>
 				<div class="input-group mb-3">
@@ -149,6 +150,7 @@
 						class="form-control"
 						aria-label="Sizing example input"
 						aria-describedby="imageUrl"
+						required
 					/>
 				</div>
 				<div class="input-group mb-3">
@@ -161,20 +163,27 @@
 						class="form-control"
 						aria-label="Sizing example input"
 						aria-describedby="price"
+						required
 					/>
 				</div>
 
 				<div class="d-flex justify-content-center">
 					<button class="btn" id="submitButton"></button>
-					<button class="btn btn-secondary mx-3" id="resetFields">
+					<button
+						type="button"
+						class="btn btn-secondary mx-3"
+						data-bs-toggle="modal"
+						data-bs-target="#myModal"
+						id="resetFields"
+					>
 						Reset Fields
 					</button>
 					<button
 						class="btn bg-danger"
 						type="button"
 						data-bs-toggle="modal"
-						data-bs-target="#deleteRequestModal"
-						id="buttonForModalDeleteRequest"
+						data-bs-target="#myModal"
+						id="deleteButton"
 					>
 						Elimina articolo
 					</button>
