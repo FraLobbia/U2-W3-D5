@@ -18,6 +18,21 @@ const priceField = document.getElementById("price");
 const submitButton = document.getElementById("submitButton");
 const deleteButton = document.getElementById("deleteButton");
 const alertBox = document.getElementById("alert-box");
+const fixResponsiveArray = document.querySelectorAll(
+	"form>div:not(:last-child)"
+); // fixResponsiveArray non una soluzione adeguata ma avevo voglia di provare un po' di cose senza dover ripensare html e css
+
+window.addEventListener("resize", () => {
+	if (window.innerWidth >= 576) {
+		for (const element of fixResponsiveArray) {
+			element.className = "input-group mb-3";
+		}
+	} else {
+		for (const element of fixResponsiveArray) {
+			element.className = "input-group-sm mb-3";
+		}
+	}
+});
 
 URL = endPoint + resourceId;
 fillFieldByResourceId(); // filling fields with data to modify
@@ -33,25 +48,7 @@ function fillFieldByResourceId() {
 	})
 		.then((response) => {
 			console.log(response);
-			switch (true) {
-				case response.status === 404:
-					throw new Error(response.status, " risorsa non trovata");
-					break;
-				case response.status === 401:
-					throw new Error("Non sei autorizzato. Errore: " + response.status);
-					break;
-				case response.status >= 400 && response.status < 500:
-					throw new Error("Errore lato Client: " + response.status);
-					break;
-				case response.status >= 500 && response.status < 600:
-					throw new Error("Errore lato Server: " + response.status);
-					break;
-
-				default:
-					break;
-			}
-			if (!response.ok) throw new Error("Errore nel reperimento dei dati");
-
+			if (!response.ok) throw response.status;
 			// document.querySelector(".spinner-border").classList.add("d-none")
 			return response.json();
 		})
@@ -76,5 +73,45 @@ function fillFieldByResourceId() {
 			brandField.value = brand;
 			imageUrlField.value = imageUrl;
 			priceField.value = price;
+		})
+		.catch((error) => {
+			showAlertError(error);
+			// document.querySelector(".spinner-border").classList.add("d-none")
 		});
+}
+//  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+function showAlertError(errorCode) {
+	switch (errorCode) {
+		case 404:
+			message = "Risorsa non trovata.";
+			break;
+		case 401:
+			message = "Non sei autorizzato.";
+			break;
+		case 418:
+			message = "I'm a teapot.";
+			break;
+		default:
+			message = "Errore con codice non definito";
+			break;
+	}
+
+	alertBox.innerHTML = `
+	<div class="alert alert-danger p-5" role="alert">
+	    <p class="fs-1"201>${message}</p>
+		<p>Codice errore: ${errorCode}</p>
+	</div>`;
+
+	previewImage.innerHTML = `
+	<img
+		src="https://a0.anyrgb.com/pngimg/900/1540/sad-meme-your-pepe-the-frog-feel-sad-sadness-crying-tree-frog-know-your-meme-humour.png"
+		class="img-thumbnail mx-auto d-block my-4"
+		alt="error image"
+		style="max-height: 200px"
+	/>`;
+
+	// setTimeout(() => {
+	// 	window.location.href = "./backoffice.html";
+	// }, 3000);
 }

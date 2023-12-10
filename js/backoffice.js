@@ -1,6 +1,6 @@
 const endPoint = "https://striveschool-api.herokuapp.com/api/product/";
 const token =
-	"Bearera eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTcyMGYxYzBkOGEyMDAwMThhNDhiNTIiLCJpYXQiOjE3MDE5NzM3ODgsImV4cCI6MTcwMzE4MzM4OH0.Kn9YzZA1fLPxw_xkhw9M8rPanpPw3O46igadjHIJorQ";
+	"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTcyMGYxYzBkOGEyMDAwMThhNDhiNTIiLCJpYXQiOjE3MDE5NzM3ODgsImV4cCI6MTcwMzE4MzM4OH0.Kn9YzZA1fLPxw_xkhw9M8rPanpPw3O46igadjHIJorQ";
 
 // get resourceId from URL --------------------------------------------------------------
 const resourceId = new URLSearchParams(window.location.search).get(
@@ -22,6 +22,21 @@ const resetFieldsButton = document.getElementById("resetFields");
 const alertBox = document.getElementById("alert-box");
 const modalTitle = document.querySelector(".modal-title");
 const modalBody = document.querySelector(".modal-body");
+const fixResponsiveArray = document.querySelectorAll(
+	"form>div:not(:last-child)"
+); // fixResponsiveArray non una soluzione adeguata ma avevo voglia di provare un po' di cose senza dover ripensare html e css
+
+window.addEventListener("resize", () => {
+	if (window.innerWidth >= 576) {
+		for (const element of fixResponsiveArray) {
+			element.className = "input-group mb-3";
+		}
+	} else {
+		for (const element of fixResponsiveArray) {
+			element.className = "input-group-sm mb-3";
+		}
+	}
+});
 
 // checking if I want create or edit by resourceId presence -------------------------------
 if (resourceId) {
@@ -86,36 +101,18 @@ function handleRequest() {
 		body: JSON.stringify(newItem),
 		headers: {
 			"Content-Type": "application/json",
-			Authorization: "fgssr",
+			Authorization: token,
 		},
 	})
 		.then((response) => {
 			console.log(response);
-			switch (true) {
-				case response.status === 404:
-					throw new Error(response.status, " risorsa non trovata");
-					break;
-				case response.status === 401:
-					throw new Error("Non sei autorizzato. Errore: " + response.status);
-					break;
-				case response.status >= 400 && response.status < 500:
-					throw new Error("Errore lato Client: " + response.status);
-					break;
-				case response.status >= 500 && response.status < 600:
-					throw new Error("Errore lato Server: " + response.status);
-					break;
-
-				default:
-					break;
-			}
-			if (!response.ok) showAlertError(response.status);
-
+			if (!response.ok) throw response.status;
 			// document.querySelector(".spinner-border").classList.add("d-none")
 			return response.json();
 		})
 		.then((item) => showAlert(item._id, method, item.imageUrl))
 		.catch((error) => {
-			console.log(error);
+			showAlertError(error);
 			// document.querySelector(".spinner-border").classList.add("d-none")
 		});
 }
@@ -128,23 +125,7 @@ function handleDelete() {
 	}) // here the items has already been deleted
 		.then((response) => {
 			console.log(response);
-			switch (true) {
-				case response.status === 404:
-					throw new Error(response.status, " risorsa non trovata");
-					break;
-				case response.status === 401:
-					throw new Error("Non sei autorizzato. Errore: " + response.status);
-					break;
-				case response.status >= 400 && response.status < 500:
-					throw new Error("Errore lato Client: " + response.status);
-					break;
-				case response.status >= 500 && response.status < 600:
-					throw new Error("Errore lato Server: " + response.status);
-					break;
-				default:
-					break;
-			}
-
+			if (!response.ok) throw response.status;
 			// document.querySelector(".spinner-border").classList.add("d-none")
 			return response.json();
 		})
@@ -156,7 +137,7 @@ function handleDelete() {
 			}, 3000);
 		})
 		.catch((error) => {
-			console.log(error);
+			showAlertError(error);
 			// document.querySelector(".spinner-border").classList.add("d-none")
 		});
 }
@@ -171,23 +152,7 @@ function fillFieldByResourceId() {
 	})
 		.then((response) => {
 			console.log(response);
-			switch (true) {
-				case response.status === 404:
-					throw new Error(response.status);
-
-				case response.status === 401:
-					const customError = new Error("Questo è un errore personalizzato");
-					customError.code = response.status;
-				case response.status >= 400 && response.status < 500:
-					throw new Error(response.status);
-
-				case response.status >= 500 && response.status < 600:
-					throw new Error(response.status);
-
-				default:
-					break;
-			}
-
+			if (!response.ok) throw response.status;
 			// document.querySelector(".spinner-border").classList.add("d-none")
 			return response.json();
 		})
@@ -283,28 +248,25 @@ function showAlert(id, methodType, urlImgObjCreatedOrEdited) {
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 function showAlertError(errorCode) {
-	console.log(errorCode);
-	console.log(errorCode.code);
-
-	switch (errorCode.code) {
-		case "404":
+	switch (errorCode) {
+		case 404:
 			message = "Risorsa non trovata.";
 			break;
-		case "401":
+		case 401:
 			message = "Non sei autorizzato.";
 			break;
-		case "418":
+		case 418:
 			message = "I'm a teapot.";
 			break;
 		default:
-			message = "Errore non personalizzato";
+			message = "Errore con codice non definito";
 			break;
 	}
 
 	alertBox.innerHTML = `
 	<div class="alert alert-danger p-5" role="alert">
 	    <p class="fs-1"201>${message}</p>
-		<p>${errorCode}</p>
+		<p>Codice errore: ${errorCode}</p>
 	</div>`;
 
 	previewImage.innerHTML = `

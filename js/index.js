@@ -2,6 +2,11 @@ const endPoint = "https://striveschool-api.herokuapp.com/api/product/";
 const token =
 	"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTcyMGYxYzBkOGEyMDAwMThhNDhiNTIiLCJpYXQiOjE3MDE5NzM3ODgsImV4cCI6MTcwMzE4MzM4OH0.Kn9YzZA1fLPxw_xkhw9M8rPanpPw3O46igadjHIJorQ";
 
+// defining fields and target to modify --------------------------------------------------------------
+const alertBox = document.getElementById("alert-box");
+const previewImage = document.getElementById("preview-image");
+
+// fullfill the page --------------------------------------------------------------
 fetch(endPoint, {
 	headers: {
 		Authorization: token,
@@ -9,25 +14,7 @@ fetch(endPoint, {
 })
 	.then((response) => {
 		console.log(response);
-		switch (true) {
-			case response.status === 404:
-				throw new Error(response.status, " risorsa non trovata");
-				break;
-			case response.status === 401:
-				throw new Error("Non sei autorizzato. Errore: " + response.status);
-				break;
-			case response.status >= 400 && response.status < 500:
-				throw new Error("Errore lato Client: " + response.status);
-				break;
-			case response.status >= 500 && response.status < 600:
-				throw new Error("Errore lato Server: " + response.status);
-				break;
-
-			default:
-				break;
-		}
-		if (!response.ok) throw new Error("Errore nel reperimento dei dati");
-
+		if (!response.ok) throw response.status;
 		// document.querySelector(".spinner-border").classList.add("d-none")
 		return response.json();
 	})
@@ -68,6 +55,43 @@ fetch(endPoint, {
 		});
 	})
 	.catch((error) => {
-		console.log(error);
+		showAlertError(error);
 		// document.querySelector(".spinner-border").classList.add("d-none")
 	});
+
+//  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+function showAlertError(errorCode) {
+	switch (errorCode) {
+		case 404:
+			message = "Risorsa non trovata.";
+			break;
+		case 401:
+			message = "Non sei autorizzato.";
+			break;
+		case 418:
+			message = "I'm a teapot.";
+			break;
+		default:
+			message = "Errore con codice non definito";
+			break;
+	}
+
+	alertBox.innerHTML = `
+	<div class="alert alert-danger p-5" role="alert">
+	    <p class="fs-1"201>${message}</p>
+		<p>Codice errore: ${errorCode}</p>
+	</div>`;
+
+	previewImage.innerHTML = `
+	<img
+		src="https://a0.anyrgb.com/pngimg/900/1540/sad-meme-your-pepe-the-frog-feel-sad-sadness-crying-tree-frog-know-your-meme-humour.png"
+		class="img-thumbnail mx-auto d-block my-4"
+		alt="error image"
+		style="max-height: 200px"
+	/>`;
+
+	// setTimeout(() => {
+	// 	window.location.href = "./backoffice.html";
+	// }, 3000);
+}

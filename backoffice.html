@@ -46,17 +46,6 @@
 								>
 							</li>
 						</ul>
-						<form class="d-flex" role="search">
-							<input
-								class="form-control me-2"
-								type="search"
-								placeholder="Search"
-								aria-label="Search"
-							/>
-							<button class="btn btn-outline-success" type="submit">
-								Search
-							</button>
-						</form>
 					</div>
 				</div>
 			</nav>
@@ -102,7 +91,7 @@
 			<div id="preview-image"></div>
 			<form>
 				<div class="input-group mb-3">
-					<span class="input-group-text w-25 justify-content-center"
+					<span class="input-group-text justify-content-center text-wrap"
 						>Nome del prodotto</span
 					>
 					<input
@@ -115,7 +104,7 @@
 					/>
 				</div>
 				<div class="input-group mb-3">
-					<span class="input-group-text w-25 justify-content-center"
+					<span class="input-group-text justify-content-center text-wrap"
 						>Descrizione</span
 					>
 					<input
@@ -128,7 +117,7 @@
 					/>
 				</div>
 				<div class="input-group mb-3">
-					<span class="input-group-text w-25 justify-content-center"
+					<span class="input-group-text justify-content-center text-wrap"
 						>Brand</span
 					>
 					<input
@@ -141,7 +130,7 @@
 					/>
 				</div>
 				<div class="input-group mb-3">
-					<span class="input-group-text w-25 justify-content-center"
+					<span class="input-group-text justify-content-center text-wrap"
 						>URL Immagine</span
 					>
 					<input
@@ -154,7 +143,7 @@
 					/>
 				</div>
 				<div class="input-group mb-3">
-					<span class="input-group-text w-25 justify-content-center"
+					<span class="input-group-text justify-content-center text-wrap"
 						>Prezzo</span
 					>
 					<input
@@ -167,11 +156,13 @@
 					/>
 				</div>
 
-				<div class="d-flex justify-content-center">
+				<div
+					class="d-flex flex-column flex-sm-row justify-content-center align-items-center"
+				>
 					<button class="btn" id="submitButton"></button>
 					<button
 						type="button"
-						class="btn btn-secondary mx-3"
+						class="btn btn-secondary m-3"
 						data-bs-toggle="modal"
 						data-bs-target="#myModal"
 						id="resetFields"

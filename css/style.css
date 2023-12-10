@@ -3,3 +3,7 @@
 .modal-dialog {
     margin: 20rem auto;
 }
+
+.input-group-text {
+    width: 150px;
+}
